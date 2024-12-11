@@ -26,7 +26,7 @@ router.post("/", (req, res) => {
   if (error) {
     res.status(400).json({
       message: "Invalid Request",
-      data: body,
+      data: error,
     });
     return;
   }
