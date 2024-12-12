@@ -2,11 +2,13 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const userRouter = require('./router/user')
+const authRouter = require('./router/auth')
 
 //MIDDLEWARE
 app.use(express.json());
 
 app.use('/user', userRouter)
+app.use('/auth', authRouter)
 app.listen(port, () => console.log("start cooking"));
 
 //   //VALIDASI NAMA
