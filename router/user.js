@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db/db.js");
 const validator = require("../validators");
+const bcrypt = require('bcrypt')
 
 let users = [
   {
@@ -55,47 +56,47 @@ router.post("/", (req, res) => {
 });
 
 
-router.put('/new', async (req, res) => {
-  const { body } = req;
+// router.put('/new', async (req, res) => {
+//   const { body } = req;
 
-  const result = validator.createUser.validate(body)
-  const { error } = result;
+//   const result = validator.createUser.validate(body)
+//   const { error } = result;
 
-  // if (error) {
-  //     res.status(400).json({
-  //         message: "Invalid Request",
-  //         data: error
-  // })
+//   // if (error) {
+//   //     res.status(400).json({
+//   //         message: "Invalid Request",
+//   //         data: error
+//   // })
 
-  try {
-      const result = await pool.query(
-          'UPDATE users set name = $1, email = $2, password = $3 where id = $4 returning *',
-          [body.name, body.email, body.password, body.id]
-      );
+//   try {
+//       const result = await pool.query(
+//           'UPDATE users set name = $1, email = $2, password = $3 where id = $4 returning *',
+//           [body.name, body.email, body.password, body.id]
+//       );
 
-      if(result.rowCount === 0){
-          return res.status(404).json({
-              "message" : "user not found"
+//       if(result.rowCount === 0){
+//           return res.status(404).json({
+//               "message" : "user not found"
 
-          })
-      }
+//           })
+//       }
 
-      res.status(201).json({
-          "message" : "success",
-          "data" : result.rows
-      });
-      } catch(error) {
-          console.error('Error creating user:', error.message);
+//       res.status(201).json({
+//           "message" : "success",
+//           "data" : result.rows
+//       });
+//       } catch(error) {
+//           console.error('Error creating user:', error.message);
 
-          //Handle unique constraint errors for email
-          if (error.code === '23505') {
-              res.status(409).json({message: 'Email already exist.'});
-          } else {
-              res.status(500).json({message: 'Internal Server Error'});
-          }
-      }
-  // }
-})
+//           //Handle unique constraint errors for email
+//           if (error.code === '23505') {
+//               res.status(409).json({message: 'Email already exist.'});
+//           } else {
+//               res.status(500).json({message: 'Internal Server Error'});
+//           }
+//       }
+//   // }
+// })
 
 router.post("/new", async (req, res) => {
   const { body } = req;
@@ -111,9 +112,10 @@ router.post("/new", async (req, res) => {
   }
 
   try {
+    const hashedPassword = await bcrypt.hash(body.password, 10)
     const result = await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *",
-      [body.name, body.email, body.password]
+      "INSERT INTO users (fullname, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
+      [body.fullname, body.username, body.email, hashedPassword]
     );
 
     res.status(201).json(result.rows[0]);
